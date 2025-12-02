@@ -38,7 +38,7 @@ pub fn step_part2(start: i32, input: []const u8) !struct { i32, i32 } {
     const inputNum = try std.fmt.parseInt(i32, input[1..], 10);
     const move = @mod(inputNum, 100);
     const end = start + (@as(i32, @intFromBool(input[0] == 'L')) * -1 + @as(i32, @intFromBool(input[0] == 'R'))) * move;
-    const zeros = @divTrunc(inputNum, 100) + @intFromBool(end >= 100 or (start != 0 and end <= 0));
+    const zeros = @divTrunc(inputNum, 100) + @intFromBool(end >= 100) +  @intFromBool(start != 0 and end <= 0);
 
     return struct { i32, i32 }{ @intCast(@abs(@mod(end,100))), zeros };
 }
