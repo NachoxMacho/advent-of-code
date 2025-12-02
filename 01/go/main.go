@@ -96,7 +96,7 @@ func step_part2(start int, input string) (int, int, error) {
 		end += 100
 	}
 
-	slog.Info("step", slog.Int("start", start), slog.String("input", input), slog.Int("move", int(inputNum)), slog.Int("end", end), slog.Int("zeros", zeros))
+	// slog.Info("step", slog.Int("start", start), slog.String("input", input), slog.Int("move", int(inputNum)), slog.Int("end", end), slog.Int("zeros", zeros))
 
 	return int(math.Abs(float64(end % 100))), zeros, nil
 }
