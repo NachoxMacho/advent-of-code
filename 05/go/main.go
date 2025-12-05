@@ -100,11 +100,19 @@ func stepPart1(ranges []Range, n int) bool {
 func stepPart2Alt(ranges []Range) int {
 	rangesCopy := slices.Clone(ranges)
 	res := 0
+	comparisons := 0
 	for i, r1 := range rangesCopy {
 		for j, r2 := range rangesCopy {
 			if i == j {
 				continue
 			}
+			if r2.High < r1.Low {
+				continue
+			}
+			if r2.Low > r1.High {
+				break
+			}
+			comparisons++
 			if r1.High >= r2.High && r1.Low <= r2.Low {
 				rangesCopy[j].Low = 0
 				rangesCopy[j].High = 0
@@ -120,6 +128,7 @@ func stepPart2Alt(ranges []Range) int {
 			}
 		}
 	}
+	fmt.Println("comparisons", comparisons, "size", len(ranges))
 	for _, r := range rangesCopy {
 		if r.Low == 0 && r.High == 0 {
 			continue
