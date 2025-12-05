@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -78,7 +79,10 @@ func run() error {
 	}
 	fmt.Println("result1", result1)
 
-	fmt.Println("result2", stepPart2Alt(ranges))
+	start := time.Now()
+	res := stepPart2Alt(ranges)
+	duration := time.Since(start)
+	fmt.Println("result2", res, "time", duration)
 	return nil
 }
 
