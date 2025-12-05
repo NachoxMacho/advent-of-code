@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -41,6 +42,8 @@ func run() error {
 		m = append(m, scanner.Text())
 	}
 	m = append(m, "")
+	neighbors := [][]int{}
+	neighborsLen := 0
 	for i, line := range m {
 		if line == "" {
 			continue
@@ -52,8 +55,24 @@ func run() error {
 			continue
 		}
 		result1 += stepPart1(prev, current, next)
+
+		neighbors = append(neighbors, []int{})
+		for j := range line {
+			neighbors[neighborsLen] = append(neighbors[neighborsLen], calculateNeighbors(prev, current, next, j))
+		}
+		neighborsLen++
 	}
 
+	startAlt := time.Now()
+	result2Alt := 0
+	for i := range neighbors {
+		for j := range neighbors[i] {
+			result2Alt += stepPart2Alt(neighbors, i, j, false)
+		}
+	}
+	durationAlt := time.Since(startAlt)
+
+	start2 := time.Now()
 	for {
 		totalOut := 0
 		for i, line := range m {
@@ -75,108 +94,126 @@ func run() error {
 		}
 		result2 += totalOut
 	}
+	duration2 := time.Since(start2)
+
+	for i := range neighbors {
+		fmt.Println(strings.ReplaceAll(m[i+1], ".", " "))
+		for j := range neighbors[i] {
+			if neighbors[i][j] <= 0 {
+				fmt.Print(" ")
+				continue
+			}
+			fmt.Print(neighbors[i][j])
+
+			if m[i+1][j] != '@' {
+				fmt.Println("mismatch at", i, j, "left", neighbors[i][j])
+			}
+		}
+		fmt.Println()
+	}
 
 	fmt.Println("result1", result1)
-	fmt.Println("result2", result2)
+	fmt.Println("result2", result2, "time", duration2)
+	fmt.Println("result2Alt", result2Alt, "time", durationAlt)
 
 	return nil
 }
 
 func stepPart1(prev string, current string, next string) int {
 	result := 0
-	fmt.Println("prev    ", prev)
-	fmt.Println("current ", current)
-	fmt.Println("next    ", next)
-	currentCopy := []rune(strings.Clone(current))
 	for i, c := range current {
-		currentCopy[i] = ' '
 		if c != '@' {
 			continue
 		}
-		neighbors := 0
-		if i > 0 && current[i-1] == '@' {
-			neighbors++
-		}
-		if i < len(current)-1 && current[i+1] == '@' {
-			neighbors++
-		}
-		if prev != "" {
-			if i > 0 && prev[i-1] == '@' {
-				neighbors++
-			}
-			if prev[i] == '@' {
-				neighbors++
-			}
-			if i < len(prev)-1 && prev[i+1] == '@' {
-				neighbors++
-			}
-		}
-		if next != "" {
-			if i > 0 && next[i-1] == '@' {
-				neighbors++
-			}
-			if next[i] == '@' {
-				neighbors++
-			}
-			if i < len(next)-1 && next[i+1] == '@' {
-				neighbors++
-			}
-		}
+		neighbors := calculateNeighbors(prev, current, next, i)
 		if neighbors < 4 {
 			result++
-			currentCopy[i] = 'x'
 		}
 	}
-	fmt.Println("modded  ", string(currentCopy))
-	fmt.Println("result", result)
 	return result
 }
 
 func stepPart2(prev string, current string, next string) (int, string) {
 	result := 0
-	fmt.Println("prev    ", prev)
-	fmt.Println("current ", current)
-	fmt.Println("next    ", next)
 	currentCopy := []rune(strings.Clone(current))
 	for i, c := range current {
 		if c != '@' {
 			continue
 		}
-		neighbors := 0
-		if i > 0 && current[i-1] == '@' {
-			neighbors++
-		}
-		if i < len(current)-1 && current[i+1] == '@' {
-			neighbors++
-		}
-		if prev != "" {
-			if i > 0 && prev[i-1] == '@' {
-				neighbors++
-			}
-			if prev[i] == '@' {
-				neighbors++
-			}
-			if i < len(prev)-1 && prev[i+1] == '@' {
-				neighbors++
-			}
-		}
-		if next != "" {
-			if i > 0 && next[i-1] == '@' {
-				neighbors++
-			}
-			if next[i] == '@' {
-				neighbors++
-			}
-			if i < len(next)-1 && next[i+1] == '@' {
-				neighbors++
-			}
-		}
+		neighbors := calculateNeighbors(prev, current, next, i)
 		if neighbors < 4 {
 			result++
 			currentCopy[i] = '.'
 		}
 	}
-	fmt.Println("modded  ", string(currentCopy))
-	fmt.Println("result", result)
 	return result, string(currentCopy)
+}
+
+func stepPart2Alt(neighbors [][]int, x int, y int, decrease bool) int {
+
+	// out of bounds or not able to remove
+	if x < 0 || x >= len(neighbors) {
+		return 0
+	}
+	if y < 0 || y >= len(neighbors[x]) {
+		return 0
+	}
+	if neighbors[x][y] < 0 {
+		return 0
+	}
+	if decrease {
+		neighbors[x][y]--
+	}
+	if neighbors[x][y] >= 4 {
+		return 0
+	}
+
+	neighbors[x][y] = -1
+	removed := 1
+	removed += stepPart2Alt(neighbors, x-1, y-1, true)
+	removed += stepPart2Alt(neighbors, x-1, y, true)
+	removed += stepPart2Alt(neighbors, x-1, y+1, true)
+	removed += stepPart2Alt(neighbors, x, y-1, true)
+	removed += stepPart2Alt(neighbors, x, y+1, true)
+	removed += stepPart2Alt(neighbors, x+1, y-1, true)
+	removed += stepPart2Alt(neighbors, x+1, y, true)
+	removed += stepPart2Alt(neighbors, x+1, y+1, true)
+
+	return removed
+}
+
+func calculateNeighbors(prev string, current string, next string, x int) int {
+	if current[x] != '@' {
+		return -1
+	}
+	neighbors := 0
+	if x > 0 && current[x-1] == '@' {
+		neighbors++
+	}
+	if x < len(current)-1 && current[x+1] == '@' {
+		neighbors++
+	}
+	if prev != "" {
+		if x > 0 && prev[x-1] == '@' {
+			neighbors++
+		}
+		if prev[x] == '@' {
+			neighbors++
+		}
+		if x < len(prev)-1 && prev[x+1] == '@' {
+			neighbors++
+		}
+	}
+	if next != "" {
+		if x > 0 && next[x-1] == '@' {
+			neighbors++
+		}
+		if next[x] == '@' {
+			neighbors++
+		}
+		if x < len(next)-1 && next[x+1] == '@' {
+			neighbors++
+		}
+	}
+	return neighbors
 }
