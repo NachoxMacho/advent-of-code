@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"log/slog"
-	"math"
 	"os"
 	"slices"
 	"strconv"
@@ -102,31 +101,26 @@ func stepPart2Alt(ranges []Range) int {
 			if i == j {
 				continue
 			}
-			fmt.Println(r1, r2)
 			if r1.High >= r2.High && r1.Low <= r2.Low {
-				fmt.Println("deleting")
 				rangesCopy[j].Low = 0
 				rangesCopy[j].High = 0
 				continue
 			}
 			if r1.High >= r2.Low && r1.Low <= r2.Low {
-				fmt.Println("raise Low")
 				rangesCopy[j].Low = r1.High + 1
 				continue
 			}
 			if r1.Low <= r2.High && r1.High >= r2.High {
-				fmt.Println("lower High")
 				rangesCopy[j].High = r1.Low - 1
 				continue
 			}
 		}
 	}
 	for _, r := range rangesCopy {
-		fmt.Println(r)
 		if r.Low == 0 && r.High == 0 {
 			continue
 		}
-		res += int(math.Abs(float64(r.High - r.Low + 1)))
+		res += r.High - r.Low + 1
 	}
 	return res
 }
